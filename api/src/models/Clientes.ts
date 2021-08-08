@@ -1,8 +1,16 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+    OneToMany
+} from "typeorm";
+import { Gastos } from "./Gastos";
 
 @Entity("clientes")
-class Clientes{
-    
+class Clientes {
+
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -24,11 +32,9 @@ class Clientes{
     @UpdateDateColumn()
     updated_at: Date;
 
-    /*
-    @Column()
-    gastos_id: string;
-    */
-    
+    @OneToMany(() => Gastos, gasto => gasto.cliente)
+    gastos: Gastos[];
+
 }
 
 export { Clientes }

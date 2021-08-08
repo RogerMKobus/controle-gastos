@@ -7,7 +7,7 @@ class ClientesController {
     async index(req: Request, res: Response) {
         const clienteRepository = getCustomRepository(ClientesRepository)
         try {
-            const clientes = await clienteRepository.find()
+            const clientes = await clienteRepository.find({ relations: ["gastos"] })
 
             return res.status(200).json(clientes)
 
@@ -22,10 +22,10 @@ class ClientesController {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("User not found");
+                throw new Error("Cliente não encontrado");
             }
 
-            const cliente = await clienteRepository.findOne(id)
+            const cliente = await clienteRepository.findOne(id, { relations: ["gastos"] })
 
             return res.status(200).json(cliente)
 
@@ -35,15 +35,14 @@ class ClientesController {
     }
 
     async create(req: Request, res: Response) {
-        const { empresa, nome, telefone, email } = req.body
-
         const clienteRepository = getCustomRepository(ClientesRepository)
 
         try {
-            const userAlreadyExists = await clienteRepository.findOne({ email })
+            const { empresa, nome, telefone, email } = req.body
 
+            const userAlreadyExists = await clienteRepository.findOne({ email })
             if (userAlreadyExists) {
-                throw new Error("User already exists!");
+                throw new Error("E-mail já utilizado");
             }
 
             const cliente = clienteRepository.create({
@@ -62,22 +61,27 @@ class ClientesController {
     }
 
     async update(req: Request, res: Response) {
-        const { empresa, nome, telefone, email } = req.body
-
         const clienteRepository = getCustomRepository(ClientesRepository)
 
         try {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("User not found");
+                throw new Error("Informe o id do cliente para atualizar");
             }
+
+            const userExists = await clienteRepository.findOne(id)
+            if(!userExists) {
+                throw new Error("Cliente não encontrado");
+            }
+
+            const { empresa, nome, telefone, email } = req.body
 
             if (email) {
                 const userAlreadyExists = await clienteRepository.findOne({ email })
 
                 if (userAlreadyExists && userAlreadyExists.id != Number(id)) {
-                    throw new Error("User already exists!");
+                    throw new Error("E-mail já utilizado");
                 }
 
                 const cliente = await clienteRepository.update(id, {
@@ -92,7 +96,21 @@ class ClientesController {
 
                     return res.status(200).json(clienteUpdated)
                 } else {
-                    return res.status(400).json('Update did not affect any row')
+                    return res.status(400).json('Operação não afetou nenhum registro')
+                }
+            } else {
+                const cliente = await clienteRepository.update(id, {
+                    empresa,
+                    nome,
+                    telefone
+                })
+
+                if (cliente.affected == 1) {
+                    const clienteUpdated = await clienteRepository.findOne(id)
+
+                    return res.status(200).json(clienteUpdated)
+                } else {
+                    return res.status(400).json('Operação não afetou nenhum registro')
                 }
             }
         } catch (err) {
@@ -107,15 +125,20 @@ class ClientesController {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("User not found");
+                throw new Error("Informe o id do cliente para excluir");
+            }
+
+            const userExists = await clienteRepository.findOne(id)
+            if(!userExists) {
+                throw new Error("Cliente não encontrado");
             }
 
             const cliente = await clienteRepository.delete(id)
 
             if (cliente.affected == 1) {
-                return res.status(200).json({ message: "User deleted" })
+                return res.status(200).json({ message: "Cliente excluído" })
             } else {
-                return res.status(400).json('Delete did not affect any row')
+                return res.status(400).json('Operação não afetou nenhum registro')
             }
 
         } catch (err) {
