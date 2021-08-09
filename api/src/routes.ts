@@ -7,6 +7,8 @@ const router = Router();
 const clientesController = new ClientesController()
 const gastosController = new GastosController()
 
+router.get("/clientes/filter/:startDate/:endDate/:id", clientesController.filter)
+router.get("/clientes/results/:mes/:ano/:id", clientesController.results)
 router.get("/clientes", clientesController.index)
 router.get("/clientes/:id", clientesController.find)
 router.post("/clientes", clientesController.create)

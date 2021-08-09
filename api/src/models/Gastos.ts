@@ -14,7 +14,7 @@ class Gastos {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column(({ type: 'decimal' }))
     valor: number;
 
     @CreateDateColumn()

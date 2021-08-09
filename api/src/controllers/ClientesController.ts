@@ -1,8 +1,72 @@
 import { Request, Response } from "express";
-import { getCustomRepository } from "typeorm";
+import { Between, getCustomRepository } from "typeorm";
 import { ClientesRepository } from '../repositories/ClientesRepository'
 
 class ClientesController {
+
+    async filter(req: Request, res: Response) {
+        const clienteRepository = getCustomRepository(ClientesRepository)
+        try {
+            const { id, startDate, endDate } = req.params
+
+            const initialDate = new Date(startDate)
+            const finalDate = new Date(endDate)
+
+            if (!id) {
+                throw new Error("Cliente não encontrado");
+            }
+
+            if (initialDate > finalDate) {
+                throw new Error("A data final deve ser maior que a data inicial")
+            }
+
+            const cliente = await clienteRepository.createQueryBuilder("cliente")
+                .innerJoinAndSelect("cliente.gastos", "gasto")
+                .where(`gasto.created_at BETWEEN '${startDate}T00:00:00' AND '${endDate}T23:59:59'`)
+                .getOne()
+
+            if (cliente) {
+                return res.status(200).json(cliente)
+            } else {
+                return res.status(200).json("Nenhum gasto registrado entre as datas informadas")
+            }
+
+        } catch (err) {
+            return res.status(400).json(err.toString())
+        }
+    }
+
+    async results(req: Request, res: Response) {
+        const clienteRepository = getCustomRepository(ClientesRepository)
+        try {
+            const { id, mes, ano } = req.params
+
+            if (!id) {
+                throw new Error("Cliente não encontrado");
+            }
+
+            const cliente = await clienteRepository.findOne(id, { relations: ["gastos"] })
+
+            let total = 0
+            let totalMes = 0
+            for (const gasto of cliente.gastos) {
+                if (Number(mes) == gasto.created_at.getMonth() + 1 && Number(ano) == gasto.created_at.getFullYear()) {
+                    totalMes += Number(gasto.valor)
+                }
+                total += Number(gasto.valor)
+            }
+
+            return res.status(200).json({
+                cliente,
+                total,
+                totalMes,
+                mediaDiaria: (totalMes / new Date(Number(ano), Number(mes), 0).getDate()).toFixed(2)
+            })
+
+        } catch (err) {
+            return res.status(400).json(err.toString())
+        }
+    }
 
     async index(req: Request, res: Response) {
         const clienteRepository = getCustomRepository(ClientesRepository)
@@ -71,7 +135,7 @@ class ClientesController {
             }
 
             const userExists = await clienteRepository.findOne(id)
-            if(!userExists) {
+            if (!userExists) {
                 throw new Error("Cliente não encontrado");
             }
 
@@ -129,7 +193,7 @@ class ClientesController {
             }
 
             const userExists = await clienteRepository.findOne(id)
-            if(!userExists) {
+            if (!userExists) {
                 throw new Error("Cliente não encontrado");
             }
 
