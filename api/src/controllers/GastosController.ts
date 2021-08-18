@@ -8,7 +8,7 @@ class GastosController {
     async index(req: Request, res: Response) {
         const gastosRepository = getCustomRepository(GastosRepository)
         try {
-            const gastos = await gastosRepository.find()
+            const gastos = await gastosRepository.find({ relations: ['cliente'] })
 
             return res.status(200).json(gastos)
 
@@ -26,7 +26,7 @@ class GastosController {
                 throw new Error("Informe o id para busca");
             }
 
-            const gasto = await gastosRepository.findOne(id)
+            const gasto = await gastosRepository.findOne(id, { relations: ['cliente'] })
 
             return res.status(200).json(gasto)
 

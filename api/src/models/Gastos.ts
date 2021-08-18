@@ -4,27 +4,37 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
-    ManyToOne
+    ManyToOne,
+    BaseEntity,
+    JoinColumn
 } from "typeorm";
 import { Clientes } from "./Clientes";
+import { ObjectType, Field, ID } from "type-graphql";
 
 @Entity("gastos")
-class Gastos {
+@ObjectType()
+class Gastos extends BaseEntity {
 
+    @Field(() => ID)
     @PrimaryGeneratedColumn()
     id: number;
 
+    @Field(() => Number)
     @Column(({ type: 'decimal' }))
     valor: number;
 
+    @Field(() => Date)
     @CreateDateColumn()
     created_at: Date;
 
+    @Field(() => Date)
     @UpdateDateColumn()
     updated_at: Date;
 
-    @ManyToOne(() => Clientes, cliente => cliente.gastos)
-    cliente: Clientes
+    @Field(() => Clientes)
+    @JoinColumn({ name: 'cliente_id' })
+    @ManyToOne(() => Clientes, cliente => cliente)
+    cliente: Clientes;
 
 }
 

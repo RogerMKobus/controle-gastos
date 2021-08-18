@@ -2,7 +2,12 @@ import "reflect-metadata"
 import express from "express"
 import { createConnection } from 'typeorm'
 import { router } from "./routes"
+import { buildSchema } from "type-graphql";
+import { ApolloServer } from "apollo-server";
 require('dotenv').config()
+
+import { GastosResolver } from './resolvers/GastosResolver'
+import { ClientesResolver } from './resolvers/ClientesResolver'
 
 const app = express()
 createConnection()
@@ -11,3 +16,14 @@ app.use(express.json())
 app.use(router)
 
 export { app }
+
+async function startApollo() {
+    const schema = await buildSchema({ resolvers: [GastosResolver, ClientesResolver] });
+
+    const server = new ApolloServer({ schema })
+
+    await server.listen(4000)
+    console.log("Apollo server => 4000")
+}
+
+startApollo()
