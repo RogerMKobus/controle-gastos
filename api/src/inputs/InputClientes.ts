@@ -17,6 +17,7 @@ class CreateClienteInput {
     
 }
 
+@InputType()
 class UpdateClienteInput {
 
     @Field({ nullable: true })

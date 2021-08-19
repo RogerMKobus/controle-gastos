@@ -23,7 +23,7 @@ class GastosController {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("Informe o id para busca");
+                return res.status(400).json("Informe o id para busca");
             }
 
             const gasto = await gastosRepository.findOne(id, { relations: ['cliente'] })
@@ -58,12 +58,12 @@ class GastosController {
         try {
             const { id } = req.params
             if (!id) {
-                throw new Error("Informe o id para atualizar");
+                return res.status(400).json("Informe o id para atualizar");
             }
 
-            const itemExists = await gastosRepository.findOne(id)
-            if (!itemExists) {
-                throw new Error("Registro não encontrado");
+            const gastoExists = await gastosRepository.findOne(id, { relations: ['cliente'] })
+            if (!gastoExists) {
+                return res.status(404).json("Gasto não encontrado");
             }
 
             const { valor, cliente } = req.body
@@ -73,16 +73,17 @@ class GastosController {
 
                 const clienteExists = await clienteRepository.findOne(cliente)
                 if(!clienteExists){
-                    throw new Error("Cliente não encontrado");
+                    return res.status(404).json("Cliente não encontrado");
                 }
             }
 
             const gasto = await gastosRepository.update(id, {
-                valor
+                valor: valor || gastoExists.valor,
+                cliente: cliente || gastoExists.cliente?.id  
             })
 
             if (gasto.affected == 1) {
-                const gastoUpdated = await gastosRepository.findOne(id)
+                const gastoUpdated = await gastosRepository.findOne(id, { relations: ['cliente'] } )
 
                 return res.status(200).json(gastoUpdated)
             } else {
@@ -98,12 +99,12 @@ class GastosController {
         try {
             const { id } = req.params
             if (!id) {
-                throw new Error("Informe o id para excluir");
+                return res.status(400).json("Informe o id para excluir");
             }
 
             const itemExists = await gastosRepository.findOne(id)
             if (!itemExists) {
-                throw new Error("Registro não encontrado");
+                return res.status(404).json("Registro não encontrado");
             }
 
             const gasto = await gastosRepository.delete(id)

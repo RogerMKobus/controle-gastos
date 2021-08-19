@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Between, getCustomRepository } from "typeorm";
+import { getCustomRepository } from "typeorm";
 import { ClientesRepository } from '../repositories/ClientesRepository'
 
 class ClientesController {
@@ -9,20 +9,26 @@ class ClientesController {
         try {
             const { id, startDate, endDate } = req.params
 
-            const initialDate = new Date(startDate)
-            const finalDate = new Date(endDate)
-
-            if (!id) {
-                throw new Error("Cliente não encontrado");
+            if (!id || !startDate || !endDate) {
+                return res.status(400).json("Argumentos de busca não encontrados");
             }
 
+            const clienteExists = await clienteRepository.findOne(id)
+
+            if (!clienteExists) {
+                return res.status(404).json("Cliente não encontrado");
+            }
+
+            const initialDate = new Date(startDate + "T00:00:00")
+            const finalDate = new Date(endDate + "T00:00:00")
+
             if (initialDate > finalDate) {
-                throw new Error("A data final deve ser maior que a data inicial")
+                return res.status(400).json("A data final deve ser maior que a data inicial")
             }
 
             const cliente = await clienteRepository.createQueryBuilder("cliente")
                 .innerJoinAndSelect("cliente.gastos", "gasto")
-                .where(`gasto.created_at BETWEEN '${startDate}T00:00:00' AND '${endDate}T23:59:59'`)
+                .where(`cliente.id = ${id} AND gasto.created_at BETWEEN '${startDate}T00:00:00' AND '${endDate}T23:59:59'`)
                 .getOne()
 
             if (cliente) {
@@ -41,11 +47,15 @@ class ClientesController {
         try {
             const { id, mes, ano } = req.params
 
-            if (!id) {
-                throw new Error("Cliente não encontrado");
+            if (!id || !mes || !ano) {
+                return res.status(400).json("Argumentos de busca não encontrados");
             }
 
             const cliente = await clienteRepository.findOne(id, { relations: ["gastos"] })
+
+            if (!cliente) {
+                return res.status(404).json("Cliente não encontrado")
+            }
 
             let total = 0
             let totalMes = 0
@@ -86,7 +96,7 @@ class ClientesController {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("Cliente não encontrado");
+                return res.status(400).json("Cliente não encontrado");
             }
 
             const cliente = await clienteRepository.findOne(id, { relations: ["gastos"] })
@@ -106,7 +116,7 @@ class ClientesController {
 
             const userAlreadyExists = await clienteRepository.findOne({ email })
             if (userAlreadyExists) {
-                throw new Error("E-mail já utilizado");
+                return res.status(400).json("E-mail já utilizado");
             }
 
             const cliente = clienteRepository.create({
@@ -131,52 +141,40 @@ class ClientesController {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("Informe o id do cliente para atualizar");
+                return res.status(400).json("Informe o id do cliente para atualizar");
             }
 
-            const userExists = await clienteRepository.findOne(id)
-            if (!userExists) {
-                throw new Error("Cliente não encontrado");
+            const clienteExists = await clienteRepository.findOne(id)
+
+            if (!clienteExists) {
+                return res.status(404).json("Cliente não encontrado");
             }
 
             const { empresa, nome, telefone, email } = req.body
 
             if (email) {
-                const userAlreadyExists = await clienteRepository.findOne({ email })
+                const emailExists = await clienteRepository.findOne({ email })
 
-                if (userAlreadyExists && userAlreadyExists.id != Number(id)) {
-                    throw new Error("E-mail já utilizado");
-                }
-
-                const cliente = await clienteRepository.update(id, {
-                    empresa,
-                    nome,
-                    telefone,
-                    email
-                })
-
-                if (cliente.affected == 1) {
-                    const clienteUpdated = await clienteRepository.findOne(id)
-
-                    return res.status(200).json(clienteUpdated)
-                } else {
-                    return res.status(400).json('Operação não afetou nenhum registro')
-                }
-            } else {
-                const cliente = await clienteRepository.update(id, {
-                    empresa,
-                    nome,
-                    telefone
-                })
-
-                if (cliente.affected == 1) {
-                    const clienteUpdated = await clienteRepository.findOne(id)
-
-                    return res.status(200).json(clienteUpdated)
-                } else {
-                    return res.status(400).json('Operação não afetou nenhum registro')
+                if (emailExists && emailExists.id != Number(id)) {
+                    return res.status(400).json("E-mail já utilizado");
                 }
             }
+
+            const cliente = await clienteRepository.update(id, {
+                empresa: empresa || clienteExists.empresa,
+                nome: nome || clienteExists.nome,
+                telefone: telefone || clienteExists.telefone,
+                email: email || clienteExists.email
+            })
+
+            if (cliente.affected == 1) {
+                const clienteUpdated = await clienteRepository.findOne(id)
+
+                return res.status(200).json(clienteUpdated)
+            } else {
+                return res.status(400).json('Operação não afetou nenhum registro')
+            }
+
         } catch (err) {
             return res.status(400).json(err.toString())
         }
@@ -189,12 +187,12 @@ class ClientesController {
             const { id } = req.params
 
             if (!id) {
-                throw new Error("Informe o id do cliente para excluir");
+                return res.status(400).json("Informe o id do cliente para excluir");
             }
 
             const userExists = await clienteRepository.findOne(id)
             if (!userExists) {
-                throw new Error("Cliente não encontrado");
+                return res.status(404).json("Cliente não encontrado");
             }
 
             const cliente = await clienteRepository.delete(id)

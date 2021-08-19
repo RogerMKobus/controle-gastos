@@ -8,6 +8,7 @@ require('dotenv').config()
 
 import { GastosResolver } from './resolvers/GastosResolver'
 import { ClientesResolver } from './resolvers/ClientesResolver'
+import { ResultadosResolver } from "./resolvers/ResultadosResolver";
 
 const app = express()
 createConnection()
@@ -18,7 +19,7 @@ app.use(router)
 export { app }
 
 async function startApollo() {
-    const schema = await buildSchema({ resolvers: [GastosResolver, ClientesResolver] });
+    const schema = await buildSchema({ resolvers: [GastosResolver, ClientesResolver, ResultadosResolver] });
 
     const server = new ApolloServer({ schema })
 

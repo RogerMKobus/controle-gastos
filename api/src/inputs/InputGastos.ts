@@ -11,6 +11,7 @@ class CreateGastoInput {
 
 }
 
+@InputType()
 class UpdateGastoInput {
 
     @Field({ nullable: true })
