@@ -26,8 +26,8 @@ async function startApollo() {
 
     const server = new ApolloServer({ schema })
 
-    await server.listen(4000)
-    console.log("Apollo server => 4000")
+    await server.listen(process.env.APOLLO_PORT)
+    console.log(`Apollo server => ${process.env.APOLLO_PORT}`)
 }
 
 startApollo()

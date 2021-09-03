@@ -9,6 +9,9 @@ class CreateGastoInput {
     @Field()
     cliente: number;
 
+    @Field()
+    data: Date;
+
 }
 
 @InputType()
@@ -19,6 +22,9 @@ class UpdateGastoInput {
 
     @Field({ nullable: true })
     cliente?: number;
+
+    @Field({ nullable: true })
+    data?: Date;
 
 }
 

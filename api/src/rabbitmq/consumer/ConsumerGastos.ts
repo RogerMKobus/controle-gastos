@@ -6,11 +6,12 @@ export default class ConsumerGastos {
     async create(gasto: string) {
         try {
             const gastosRepository = getCustomRepository(GastosRepository)
-            const { valor, cliente } = JSON.parse(gasto)
+            const { valor, cliente, data } = JSON.parse(gasto)
 
             const gastoCreated = gastosRepository.create({
-                valor: valor,
-                cliente: cliente
+                valor,
+                cliente,
+                data: data || new Date()
             })
 
             await gastosRepository.save(gastoCreated)
@@ -27,14 +28,15 @@ export default class ConsumerGastos {
         try {
             const gastosRepository = getCustomRepository(GastosRepository)
 
-            const { id, valor, cliente } = JSON.parse(gasto)
+            const { id, valor, cliente, data } = JSON.parse(gasto)
 
             const gastoExist = await gastosRepository.findOne(id)
 
             if (cliente) {
                 const updateGasto = await gastosRepository.update(id, {
                     valor: valor || gastoExist.valor,
-                    cliente: cliente
+                    cliente: cliente,
+                    data: data || gastoExist.data
                 })
 
                 if (updateGasto.affected == 1) {
@@ -51,7 +53,8 @@ export default class ConsumerGastos {
 
             } else {
                 const updateGasto = await gastosRepository.update(id, {
-                    valor: valor || gastoExist.valor
+                    valor: valor || gastoExist.valor,
+                    data: data || gastoExist.data
                 })
 
                 if (updateGasto.affected == 1) {

@@ -25,6 +25,10 @@ class Gastos extends BaseEntity {
 
     @Field(() => Date)
     @CreateDateColumn()
+    data: Date;
+
+    @Field(() => Date)
+    @CreateDateColumn()
     created_at: Date;
 
     @Field(() => Date)

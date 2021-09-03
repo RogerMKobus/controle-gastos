@@ -29,7 +29,8 @@ export class GastosResolver {
 
         const dataWithCliente = {
             valor: data.valor,
-            cliente
+            cliente,
+            data: data.data || new Date()
         }
 
         const gasto = Gastos.create(dataWithCliente)
@@ -51,7 +52,8 @@ export class GastosResolver {
 
             const newData = {
                 valor: data.valor ? data.valor : gasto.valor,
-                cliente
+                cliente,
+                data: data.data ? data.data : gasto.data
             }
 
             Object.assign(gasto, newData)

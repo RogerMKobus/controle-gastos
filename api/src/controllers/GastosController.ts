@@ -38,7 +38,7 @@ class GastosController {
     async create(req: Request, res: Response) {
         const gastosRepository = getCustomRepository(GastosRepository)
         try {
-            const { valor, cliente } = req.body
+            const { valor, cliente, data } = req.body
 
             const clienteRepository = getCustomRepository(ClientesRepository)
             const clienteExists = await clienteRepository.findOne(cliente)
@@ -48,7 +48,8 @@ class GastosController {
 
             const gasto = gastosRepository.create({
                 valor,
-                cliente
+                cliente,
+                data: data || new Date()
             })
 
             await gastosRepository.save(gasto)
@@ -72,7 +73,7 @@ class GastosController {
                 return res.status(404).json("Gasto não encontrado");
             }
 
-            const { valor, cliente } = req.body
+            const { valor, cliente, data } = req.body
 
             if (cliente) {
                 const clienteRepository = getCustomRepository(ClientesRepository)
@@ -85,7 +86,8 @@ class GastosController {
 
             const gasto = await gastosRepository.update(id, {
                 valor: valor || gastoExists.valor,
-                cliente: cliente || gastoExists.cliente?.id
+                cliente: cliente || gastoExists.cliente?.id,
+                data: data || gastoExists.data
             })
 
             if (gasto.affected == 1) {

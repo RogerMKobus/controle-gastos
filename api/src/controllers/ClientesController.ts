@@ -28,7 +28,7 @@ class ClientesController {
 
             const cliente = await clienteRepository.createQueryBuilder("cliente")
                 .innerJoinAndSelect("cliente.gastos", "gasto")
-                .where(`cliente.id = ${id} AND gasto.created_at BETWEEN '${startDate}T00:00:00' AND '${endDate}T23:59:59'`)
+                .where(`cliente.id = ${id} AND gasto.data BETWEEN '${startDate}T00:00:00' AND '${endDate}T23:59:59'`)
                 .getOne()
 
             if (cliente) {
@@ -67,10 +67,10 @@ class ClientesController {
             }
 
             return res.status(200).json({
-                cliente,
                 total,
                 totalMes,
-                mediaDiaria: (totalMes / new Date(Number(ano), Number(mes), 0).getDate()).toFixed(2)
+                mediaDiaria: (totalMes / new Date(Number(ano), Number(mes), 0).getDate()).toFixed(2),
+                cliente
             })
 
         } catch (err) {
